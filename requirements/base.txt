@@ -1,0 +1,20 @@
+
+
+
+# django itself
+Django~=3.2.12
+
+# Third party packages
+environs[django]~=9.5.0
+# psycopg2~=2.9.3 # commented out for serverless setup
+whitenoise~=5.3.0
+
+# django plugins
+django-cors-headers~=3.11.0
+djangorestframework~=3.13.1
+django-taggit~=2.1.0
+django-recurrence~=1.11.1
+django-phonenumber-field[phonenumberslite]~=6.1.0
+
+# Monitoring and logging using Sentry
+# sentry-sdk~=1.5.7
