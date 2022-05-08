@@ -15,12 +15,12 @@ from phonenumber_field.modelfields import PhoneNumberField
 class CustomAccountManager(BaseUserManager):
     """Custom manager for custom user model."""
 
-    def create_user(self, email, mobile, password, **other_fields):
+    def create_user(self, email, username, password, **other_fields):
         """Override the create_user django method.
 
         Args:
             email (str): email of the user
-            mobile (int): phone number of the user
+            username (str): unique username of the user 
             first_name (str): First name of the user
             password (str): password of the user
 
@@ -31,16 +31,18 @@ class CustomAccountManager(BaseUserManager):
             user: user model to the super class
         """
         if not email:
-            raise ValueError("Users must have an email address")
+            raise ValueError("User must have an email address")
+        if not username:
+            raise ValueError("User must have a username")
 
         email = self.normalize_email(email)
-        user = self.model(email=email, user_name=email, mobile=mobile, **other_fields)
+        user = self.model(email=email, username=username, **other_fields)
         password = make_password(password)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, mobile, password, **other_fields):
+    def create_superuser(self, email, username, password, **other_fields):
         """Override the create_superuser django method."""
         other_fields.setdefault("is_staff", True)
         other_fields.setdefault("is_superuser", True)
@@ -52,24 +54,46 @@ class CustomAccountManager(BaseUserManager):
         if other_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
 
-        return self.create_user(email, mobile, password, **other_fields)
+        return self.create_user(email, username, password, **other_fields)
 
 
-class NewUser(AbstractBaseUser, PermissionsMixin):
-    """Custom User model to override the django User models."""
+class User(AbstractBaseUser, PermissionsMixin):
+    """Custom User model to override the django User models.
+
+    Attributes
+    ----------
+    email: str
+        email of the user
+    username: str
+        username of the user
+    first_name: str
+        first name of the user
+    last_name: str
+        last_name of the user
+    date_of_birth: datetime
+        birth date of the user
+    join_date: datetime
+        the date on which user joined/registered
+    about: str
+        information about the user
+    is_staff: bool
+        a flag to show if user is a staff user or not  (default is False)
+    is_active:
+        flag used to show if the user is active or not (default is True)
+    
+    Returns
+    -------
+    user object
+        an object of the user model which is saved into the database
+    """
 
     email = models.EmailField(_("Email address"), unique=True)
-    user_name = models.CharField(_("User name"), max_length=50, unique=True)
+    username = models.CharField(_("User name"), max_length=50, unique=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
-    mobile = PhoneNumberField(unique=True, null=False, blank=False)
 
-    is_user = models.BooleanField(default=False)
-    is_merchant = models.BooleanField(default=False)
-    is_verified = models.BooleanField(default=False)
-
-    start_date = models.DateTimeField(default=timezone.now)
+    join_date = models.DateTimeField(default=timezone.now)
     about = models.TextField(_("about"), max_length=500, blank=True)
 
     # Django admin fields
@@ -78,8 +102,8 @@ class NewUser(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomAccountManager()
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["mobile"]
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["email"]
 
     def __str__(self):
-        return self.user_name
+        return self.username
